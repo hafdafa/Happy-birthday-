@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday Tesalonika!</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <style>
+        :root {
+            --primary-pink: #ff758f;
+            --dark-pink: #ff4d6d;
+            --text-color: #4a4a4a;
+            --glass-bg: rgba(255, 255, 255, 0.82);
+            --glass-blur: blur(8px);
+            /* Candle Colors */
+            --candle-color: #ffb3c1;
+            --flame-outer: rgba(255, 209, 102, 0.8);
+            --flame-inner: rgba(255, 255, 255, 1);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #fff0f2;
+            font-family: 'Poppins', sans-serif;
+            color: var(--text-color);
+            overflow: hidden; /* Locked until intro is clicked */
+        }
+
+        /* Fixed Lily Backgrounds */
+        .bg-flower {
+            position: fixed;
+            width: 28vh;
+            height: auto;
+            z-index: 10;
+            pointer-events: none;
+            mix-blend-mode: multiply; 
+            opacity: 0.65;
+        }
+
+        .tl { top: -10px; left: -10px; transform: rotate(-10deg); }
+        .tr { top: -10px; right: -10px; transform: rotate(80deg) scaleX(-1); }
+        .bl { bottom: -10px; left: -10px; transform: rotate(190deg); }
+        .br { bottom: -10px; right: -10px; transform: rotate(100deg); }
+
+        /* Welcome Gate */
+        #intro-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #fff0f2; z-index: 1000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            transition: opacity 1s ease, transform 1s ease; cursor: pointer;
+        }
+        #intro-overlay.fade-out { opacity: 0; pointer-events: none; transform: scale(1.05); }
+        .intro-card {
+            background: var(--glass-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+            padding: 40px 30px; border-radius: 24px; box-shadow: 0 10px 30px rgba(255, 117, 143, 0.15);
+            max-width: 340px; width: 85%;
+        }
+
+        /* Main Content */
+        .main-content { position: relative; z-index: 20; opacity: 0; transition: opacity 1.5s ease 0.5s; }
+        body.unlocked .main-content { opacity: 1; }
+        .section { min-height: 100vh; display: flex; justify-content: center; align-items: center; box-sizing: border-box; padding: 60px 20px; }
+
+        /* Aesthetic Professional Text Cards */
+        .aesthetic-card {
+            background: var(--glass-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+            max-width: 520px; width: 100%; padding: 40px 35px;
+            border-radius: 24px; box-shadow: 0 15px 35px rgba(255, 117, 143, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            transform: translateY(20px); opacity: 0; transition: transform 1s ease, opacity 1s ease;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .aesthetic-card.visible { transform: translateY(0); opacity: 1; }
+
+        /* Typography */
+        h1 { color: var(--dark-pink); font-size: 2.2em; margin-top: 0; font-weight: 700; letter-spacing: -0.5px; }
+        h2 { color: var(--dark-pink); font-size: 1.8em; margin-top: 0; font-weight: 600; text-align: center;}
+        p { font-size: 1.05em; line-height: 1.7; font-weight: 300; margin: 0 0 20px 0; text-align: center;}
+        .accent-text { color: var(--primary-pink); font-weight: 600; }
+
+        /* Pulse Indicator */
+        .scroll-indicator {
+            margin-top: 25px; font-size: 0.9em; color: var(--primary-pink);
+            font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+            animation: pulse 2s infinite; text-align: center;
+        }
+        @keyframes pulse { 0%, 100% { transform: translateY(0); opacity: 0.6; } 50% { transform: translateY(6px); opacity: 1; } }
+
+        /* ————————————————
+           Aesthetic Interactive Candle CSS
+           ———————————————— */
+        .candle-section {
+            margin: 30px 0 10px 0;
+            position: relative;
+            cursor: pointer;
+            /* Prevents blue highlight on tap */
+            -webkit-tap-highlight-color: transparent; 
+        }
+
+        /* The wick */
+        .candle-section::before {
+            content: '';
+            position: absolute;
+            bottom: 80px; /* Sits on top of the candle body */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 3px;
+            height: 15px;
+            background: #444;
+            border-radius: 2px;
+        }
+
+        /* Candle Body */
+        .candle-body {
+            width: 35px;
+            height: 80px;
+            background: var(--candle-color);
+            background: linear-gradient(to bottom, #ffc9d4, var(--candle-color));
+            border-radius: 8px 8px 4px 4px;
+            box-shadow: inset 0 -5px 10px rgba(0,0,0,0.05), 0 5px 15px rgba(255, 117, 143, 0.1);
+        }
+
+        /* Candle Flame */
+        .flame {
+            position: absolute;
+            bottom: 92px; /* Adjusted to sit just above the wick */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 16px;
+            height: 26px;
+            background-color: var(--flame-inner);
+            border-radius: 50% 50% 35% 35%;
+            box-shadow: 
+                0 0 10px 0 var(--flame-outer),
+                0 0 20px 5px var(--flame-outer);
+            animation: flicker 3s infinite ease-in-out;
+            transform-origin: center bottom;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+
+        /* Flicker Animation */
+        @keyframes flicker {
+            0%, 100% { transform: translateX(-50%) scale(1) rotate(0deg); }
+            20% { transform: translateX(-50%) scale(1.05, 0.95) rotate(-1deg); }
+            40% { transform: translateX(-50%) scale(0.95, 1.05) rotate(1deg); opacity: 0.9; }
+            60% { transform: translateX(-50%) scale(1.1, 0.9) rotate(-0.5deg); }
+            80% { transform: translateX(-50%) scale(0.9, 1.1) rotate(0.5deg); opacity: 1;}
+        }
+
+        /* Blown Out State (Applied by JS) */
+        .candle-section.blown-out .flame {
+            opacity: 0;
+            transform: translateX(-50%) scale(0) translateY(-10px);
+            pointer-events: none;
+            animation: none; /* Stop flickering */
+        }
+
+        /* Minimalistic Smoke Puff effect on blow out */
+        .smoke {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) scale(0);
+            width: 20px;
+            height: 20px;
+            background: rgba(200, 200, 200, 0.6);
+            border-radius: 50%;
+            filter: blur(5px);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .candle-section.blown-out .smoke {
+            animation: puff 1s ease-out forwards;
+        }
+
+        @keyframes puff {
+            0% { transform: translateX(-50%) scale(0); opacity: 0; }
+            10% { transform: translateX(-50%) scale(1); opacity: 0.6; }
+            100% { transform: translateX(-50%) scale(2.5) translateY(-30px); opacity: 0; }
+        }
+
+        /* ———————————————— */
+
+        /* Interactive Button */
+        .action-btn {
+            background-color: var(--dark-pink);
+            color: white;
+            border: none;
+            padding: 14px 36px;
+            font-size: 1em;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s, opacity 0.3s;
+            box-shadow: 0 5px 15px rgba(255, 77, 109, 0.3);
+            margin-top: 15px;
+        }
+
+        /* Disable state before candle is blown */
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .action-btn:not(:disabled):hover {
+            background-color: #ff1a40;
+            transform: scale(1.03);
+            box-shadow: 0 8px 20px rgba(255, 77, 109, 0.4);
+        }
+
+        #hiddenMessage {
+            display: none;
+            color: var(--dark-pink);
+            font-weight: 700;
+            margin-top: 25px;
+            font-size: 1.4em;
+            animation: fadeIn 0.8s ease forwards;
+            text-align: center;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    </style>
+</head>
+<body>
+
+    <audio id="bdayMusic" src="song.mp3" loop></audio>
+
+    <img src="lily.jpg" alt="" class="bg-flower tl">
+    <img src="lily.jpg" alt="" class="bg-flower tr">
+    <img src="lily.jpg" alt="" class="bg-flower bl">
+    <img src="lily.jpg" alt="" class="bg-flower br">
+
+    <div id="intro-overlay">
+        <div class="intro-card">
+            <h1>For You, Tesalonika ✨</h1>
+            <p>I built a small digital space just to celebrate your day. Tap anywhere to enter.</p>
+            <div class="scroll-indicator">Tap To Open</div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        
+        <div class="section">
+            <div class="aesthetic-card">
+                <h1>Happy Birthday!<br><span style="font-size: 1.3em;"></span></h1>
+                <p>Someone is turning 22 today eh?</p>
+                <div class="scroll-indicator">Scroll Down </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="aesthetic-card">
+                <h2>A Little Reminder...</h2>
+                <p>
+                    I just wanted to say thank you for being such a good person. Your kindness means a lot to me, and you genuinely push me to be a better version of myself just by being you.
+                    ​I know college has been keeping you crazy busy lately, but I hope you can take a breathe today and just enjoy yourself.
+                    You work so hard and you deserve the absolute best day. Happy birthday!
+
+
+                </p>
+                <p>
+                    Never forget how capable, amazing, and valued you truly are. You're such a awesome soul
+                </p>
+                <div class="scroll-indicator">Almost there... </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="aesthetic-card">
+                <h2>Time to make a wish...</h2>
+                <p>Tap the candle flame tesa!.</p>
+                
+                <div class="candle-section" id="candleSurprise">
+                    <div class="flame"></div>
+                    <div class="candle-body"></div>
+                    <div class="smoke"></div>
+                </div>
+
+                <button class="action-btn" id="surpriseBtn" disabled>Make a Wish!</button>
+                <div id="hiddenMessage">Wishing you the absolute best year, Tesalonika🎈✨</div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const introOverlay = document.getElementById('intro-overlay');
+        const music = document.getElementById('bdayMusic');
+        const btn = document.getElementById('surpriseBtn');
+        const msg = document.getElementById('hiddenMessage');
+        const candle = document.getElementById('candleSurprise');
+
+        // Initializer Event
+        introOverlay.addEventListener('click', function() {
+            introOverlay.classList.add('fade-out');
+            document.body.classList.add('unlocked');
+            document.body.style.overflowY = 'auto'; // Unlock scrolling
+
+            if (music) {
+                music.play().catch(err => console.error("Audio block bypassed but failed:", err));
+            }
+            
+            setTimeout(checkVisibility, 200);
+        });
+
+        /* ————————————————
+           Candle Interaction Logic
+           ———————————————— */
+        candle.addEventListener('click', function() {
+            // Prevent re-blowing if already blown
+            if (candle.classList.contains('blown-out')) return;
+
+            // Trigger CSS animation (hides flame, shows smoke)
+            candle.classList.add('blown-out');
+            
+            // Wait for smoke animation, then unlock the button
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = "Make a Wish! ";
+            }, 800); 
+        });
+        /* ———————————————— */
+
+        // Confetti Trigger (Only works after button is enabled)
+        btn.addEventListener('click', function() {
+            msg.style.display = 'block';
+            btn.style.display = 'none';
+            
+            confetti({
+                particleCount: 180,
+                spread: 90,
+                origin: { y: 0.65 },
+                colors: ['#ff4d6d', '#ff758f', '#ffb3c1', '#ffd60a', '#ffffff']
+            });
+        });
+
+        // Scroll Reveal Animation
+        const cards = document.querySelectorAll('.aesthetic-card');
+        function checkVisibility() {
+            const triggerBottom = window.innerHeight * 0.85;
+            cards.forEach(card => {
+                const cardTop = card.getBoundingClientRect().top;
+                if (cardTop < triggerBottom) {
+                    card.classList.add('visible');
+                }
+            });
+        }
+        window.addEventListener('scroll', checkVisibility);
+    </script>
+</body>
+</html>
